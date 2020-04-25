@@ -109,6 +109,7 @@ if __name__ == '__main__':
     bNose, gNose, rNose = cv2.split(imgNose)
     cv2.imshow("bNose", bNose)
 
+
     # imgNose = addNoise(img,13)
     #
     # cv2.imwrite("putinNose.jpg",imgNose)
