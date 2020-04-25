@@ -74,7 +74,7 @@ def Convolution(image, kernel, D):
     centerHeightM = D.index(0)
     centerwidthM = D.index(0)
 
-    img2 = np.zeros((height + heightM -1, width + widthM -1 ), np.uint8)
+    img2 = np.zeros((height + heightM - 1, width + widthM - 1), np.uint8)
     img2[centerHeightM:height + centerHeightM, centerwidthM:width + centerwidthM] = image
 
     for i in range(centerHeightM):
@@ -85,12 +85,12 @@ def Convolution(image, kernel, D):
         img2[:, i] = img2[:, centerwidthM]
         img2[:, width + 1 + i] = img2[:, width]
 
-    new_image = np.zeros((height + centerHeightM, width + centerwidthM))
+    new_image = np.zeros((height + centerHeightM, width + centerwidthM), np.uint8)
 
     for i in range(centerHeightM, height + centerHeightM):
         for j in range(centerwidthM, width + centerwidthM):
-            new_image[i - centerHeightM][j - centerwidthM] = np.sum(img2[i - centerHeightM: i + centerHeightM + 1,
-                                                                    j - centerwidthM: j + centerwidthM + 1] * kernel)
+            new_image[i][j] = np.sum( img2[i - centerHeightM: i + (heightM - centerHeightM - 1) + 1,
+                j - centerwidthM: j + (widthM - centerwidthM - 1) + 1] * kernel)
 
     return new_image[centerHeightM:height + centerHeightM, centerwidthM:width + centerwidthM]
 
@@ -98,11 +98,12 @@ def Convolution(image, kernel, D):
 if __name__ == '__main__':
     img = cv2.imread("putin.jpg")
     imgNose = cv2.imread("putinNose.jpg")
-    # D = [-1, 0, 1, 2]
-    D = [-2, -1, 0, 1]
+    D = [-1, 0, 1, 2]
+    # D = [-2, -1, 0, 1]
 
     b, g, r = cv2.split(img)
     bNose, gNose, rNose = cv2.split(imgNose)
+    cv2.imshow("bNose", bNose)
 
     # imgNose = addNoise(img,13)
 
@@ -114,7 +115,7 @@ if __name__ == '__main__':
     Mask = np.array(Mask).reshape(4, 4)
     print(Mask)
 
-    result = Convolution(bNose, Mask,D)
+    result = Convolution(bNose, Mask, D)
 
     cv2.imshow("Approval Method", result)
 
