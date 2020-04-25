@@ -35,16 +35,18 @@ def matrixA(imgNose):
     matrixA = []
     for n in range(-1, 3):
         for m in range(-1, 3):
-             for k in range(-1, 3):
-                 for l in range(-1, 3):
-                     matrixA.append(B(imgNose, imgNose, n - k, m - l))
+            for k in range(-1, 3):
+                for l in range(-1, 3):
+                    matrixA.append(B(imgNose, imgNose, n - k, m - l))
 
-    matrixA = np.array(matrixA).reshape(16,16)
+    matrixA = np.array(matrixA).reshape(16, 16)
 
     return matrixA
 
-def matrixMask(A,b):
-    return np.linalg.solve(A,b)
+
+def matrixMask(A, b):
+    return np.linalg.solve(A, b)
+
 
 def B(A, B, k, l):
     rows = A.shape[0]
@@ -65,14 +67,14 @@ def B(A, B, k, l):
     return np.sum(np.sum(A[rowsA][colsA] * B[rowsB][colsB])) / ((rows - 1) * (cols - 1))
 
 
-def Convolution(image, kernel):
+def Convolution(image, kernel, D):
     heightM, widthM = kernel.shape
     height, width = image.shape
 
-    centerHeightM = int(np.ceil(heightM / 2) - 1)
-    centerwidthM = int(np.ceil(widthM / 2) - 1)
+    centerHeightM = D.index(0)
+    centerwidthM = D.index(0)
 
-    img2 = np.zeros((height + centerHeightM * 2, width + centerwidthM * 2), np.uint8)
+    img2 = np.zeros((height + heightM -1, width + widthM -1 ), np.uint8)
     img2[centerHeightM:height + centerHeightM, centerwidthM:width + centerwidthM] = image
 
     for i in range(centerHeightM):
@@ -92,9 +94,12 @@ def Convolution(image, kernel):
 
     return new_image[centerHeightM:height + centerHeightM, centerwidthM:width + centerwidthM]
 
+
 if __name__ == '__main__':
     img = cv2.imread("putin.jpg")
     imgNose = cv2.imread("putinNose.jpg")
+    # D = [-1, 0, 1, 2]
+    D = [-2, -1, 0, 1]
 
     b, g, r = cv2.split(img)
     bNose, gNose, rNose = cv2.split(imgNose)
@@ -105,10 +110,11 @@ if __name__ == '__main__':
 
     bvec = getVec_b(b, bNose)
     A = matrixA(bNose)
-    Mask = matrixMask(A,bvec)
-    Mask = np.array(Mask).reshape(4,4)
+    Mask = matrixMask(A, bvec)
+    Mask = np.array(Mask).reshape(4, 4)
+    print(Mask)
 
-    result = Convolution(bNose,Mask)
+    result = Convolution(bNose, Mask,D)
 
     cv2.imshow("Approval Method", result)
 
