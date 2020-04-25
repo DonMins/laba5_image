@@ -79,16 +79,20 @@ def Convolution(image, kernel, D):
 
     for i in range(centerHeightM):
         img2[i, :] = img2[centerHeightM, :]
-        img2[height + 1 + i, :] = img2[height, :]
+
+    for i in range(heightM - centerHeightM):
+        img2[height + i, :] = img2[height, :]
 
     for i in range(centerwidthM):
         img2[:, i] = img2[:, centerwidthM]
-        img2[:, width + 1 + i] = img2[:, width]
 
-    new_image = np.zeros((height + centerHeightM, width + centerwidthM), np.uint8)
+    for i in range(widthM - centerwidthM):
+        img2[:, width +  i] = img2[:, width]
 
-    for i in range(centerHeightM, height + centerHeightM):
-        for j in range(centerwidthM, width + centerwidthM):
+    new_image = np.zeros((height + heightM - 1, width + widthM - 1), np.uint8)
+
+    for i in range(centerHeightM, height+1):
+        for j in range(centerwidthM, width+1):
             new_image[i][j] = np.sum( img2[i - centerHeightM: i + (heightM - centerHeightM - 1) + 1,
                 j - centerwidthM: j + (widthM - centerwidthM - 1) + 1] * kernel)
 
@@ -98,15 +102,15 @@ def Convolution(image, kernel, D):
 if __name__ == '__main__':
     img = cv2.imread("putin.jpg")
     imgNose = cv2.imread("putinNose.jpg")
-    D = [-1, 0, 1, 2]
-    # D = [-2, -1, 0, 1]
+    # D = [-1, 0, 1, 2]
+    D = [-2, -1, 0, 1]
 
     b, g, r = cv2.split(img)
     bNose, gNose, rNose = cv2.split(imgNose)
     cv2.imshow("bNose", bNose)
 
     # imgNose = addNoise(img,13)
-
+    #
     # cv2.imwrite("putinNose.jpg",imgNose)
 
     bvec = getVec_b(b, bNose)
@@ -115,9 +119,27 @@ if __name__ == '__main__':
     Mask = np.array(Mask).reshape(4, 4)
     print(Mask)
 
-    result = Convolution(bNose, Mask, D)
+    resultB = Convolution(bNose, Mask, D)
 
-    cv2.imshow("Approval Method", result)
+    bvec = getVec_b(g, gNose)
+    A = matrixA(gNose)
+    Mask = matrixMask(A, bvec)
+    Mask = np.array(Mask).reshape(4, 4)
+    print(Mask)
+
+    resultG = Convolution(gNose, Mask, D)
+
+    bvec = getVec_b(r, rNose)
+    A = matrixA(rNose)
+    Mask = matrixMask(A, bvec)
+    Mask = np.array(Mask).reshape(4, 4)
+    print(Mask)
+
+    resultR = Convolution(rNose, Mask, D)
+    m = cv2.merge((resultB, resultG, resultR))
+    print(m.shape)
+
+    cv2.imshow("Approval Method", m)
 
     cv2.waitKey(0)
     img2 = cv2.imread("tramp.jpg")
