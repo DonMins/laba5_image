@@ -60,6 +60,13 @@ def B(A, B, k, l):
 
     return np.sum(np.sum(A[k:rows, l:cols] * B[0:rows - k, 0:cols - l])) / ((rows - 1) * (cols - 1))
 
+def getError(img, img2):
+    width = img.shape[1]
+    height = img.shape[0]
+    error = np.array(img.flatten(),dtype=int) - np.array(img2.flatten(),dtype=int)
+    percentage = len(list(filter(lambda x: x > 0, error.flatten())))*100 /(width*height*3)
+    print("% шума = ", percentage)
+
 
 def Convolution(image, kernel, D):
     heightM, widthM = kernel.shape
@@ -87,8 +94,14 @@ def Convolution(image, kernel, D):
 
     for i in range(centerHeightM, height + 1):
         for j in range(centerwidthM, width + 1):
-            new_image[i][j] = np.sum(img2[i - centerHeightM: i + (heightM - centerHeightM - 1) + 1,
+            pixel = np.sum(img2[i - centerHeightM: i + (heightM - centerHeightM - 1) + 1,
                                      j - centerwidthM: j + (widthM - centerwidthM - 1) + 1] * kernel)
+            if pixel > 255:
+                new_image[i][j] = 255
+            elif pixel < 0:
+                new_image[i][j] = 0
+            else:
+                new_image[i][j] = pixel
 
     return new_image[centerHeightM:height + centerHeightM, centerwidthM:width + centerwidthM]
 
@@ -133,5 +146,8 @@ if __name__ == '__main__':
     print(m.shape)
 
     cv2.imshow("REs", m)
+
+    getError(img,m)
+    getError(img,imgNose)
 
     cv2.waitKey(0)
