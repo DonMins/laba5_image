@@ -10,9 +10,15 @@ def addNoise(image, noise_percentage):
     nose = int(np.ceil(noise_percentage * vals / 100))
     # Salt mode
     num_salt = int(nose)
+    listAllCoord = []
+    for i in range(image.shape[0]):
+        for j in range(image.shape[1]):
+            listAllCoord.append([i, j])
 
+    random.shuffle(listAllCoord)
     for i in range(0, int(num_salt)):
-        out[np.random.randint(0, image.shape[0]), np.random.randint(0, image.shape[1])] = [0, 0, 0]
+        coord = listAllCoord.pop(np.random.randint(0, len(listAllCoord)))
+        out[coord[0], coord[1]] = [random.randint(0,255), random.randint(0,255), random.randint(0,255)]
 
     return out
 
@@ -63,10 +69,8 @@ def B(A, B, k, l):
 def getError(img, img2):
     width = img.shape[1]
     height = img.shape[0]
-    error = np.array(img.flatten(),dtype=int) - np.array(img2.flatten(),dtype=int)
-    percentage = len(list(filter(lambda x: x > 0, error.flatten())))*100 /(width*height*3)
-    print("% шума = ", percentage)
-
+    error = (np.sum((np.array(img.flatten(),dtype=int) - np.array(img2.flatten(),dtype=int))**2,dtype = np.float64) /(width*height*3))**0.5
+    return error
 
 def Convolution(image, kernel, D):
     heightM, widthM = kernel.shape
@@ -108,7 +112,7 @@ def Convolution(image, kernel, D):
 
 if __name__ == '__main__':
     img = cv2.imread("putin.png")
-    imgNose = cv2.imread("putinNose.jpg")
+    imgNose = addNoise(img,13)
     b, g, r = cv2.split(img)
     bNose, gNose, rNose = cv2.split(imgNose)
 
@@ -123,7 +127,7 @@ if __name__ == '__main__':
     Mask = np.array(Mask).reshape(4, 4)
     print(Mask)
     resultB = Convolution(bNose, Mask, D)
-    cv2.imshow("resultB", resultB)
+    # cv2.imshow("resultB", resultB)
 
     bvec2 = getVec_b(g, gNose, D)
     A2 = matrixA(gNose, D)
@@ -132,22 +136,58 @@ if __name__ == '__main__':
     print(Mask2)
 
     resultG = Convolution(gNose, Mask2, D)
-    cv2.imshow("resultG", resultG)
+    # cv2.imshow("resultG", resultG)
 
     bvec3 = getVec_b(r, rNose, D)
     A3 = matrixA(rNose, D)
     Mask3 = matrixMask(A3, bvec3)
     Mask3 = np.array(Mask3).reshape(4, 4)
     print(Mask3)
-    resultR = Convolution(rNose, Mask, D)
-    cv2.imshow("resultR", resultR)
+    resultR = Convolution(rNose, Mask3, D)
+    # cv2.imshow("resultR", resultR)
 
     m = cv2.merge((resultB, resultG, resultR))
     print(m.shape)
 
-    cv2.imshow("REs", m)
+    cv2.imshow("Res", m)
 
-    getError(img,m)
-    getError(img,imgNose)
+    print("Исходная с исходной, ошибка восстановления" , getError(img,img))
+    print("Исходная с зашумленной, ошибка восстановления" , getError(img,imgNose))
+    print("Исходная с отфильтрованной ошибка восстановления" , getError(img,m))
+    print("В процентном соотношении стало лучше на " , 100 - (getError(img,m)*100/getError(img,imgNose))," %")
+
+    imgCar = cv2.imread("car.jpg")
+    imgCarNose = addNoise(imgCar, 13)
+    cv2.imshow("imgCar", imgCar)
+    cv2.imshow("imgCarNose", imgCarNose)
+    bCarNose, gCarNose, rCarNose = cv2.split(imgCarNose)
+    resultBCar = Convolution(bCarNose, Mask, D)
+    resultGCar = Convolution(gCarNose, Mask2, D)
+    resultRCar = Convolution(rCarNose, Mask3, D)
+    carRes = cv2.merge((resultBCar, resultGCar, resultRCar))
+
+    cv2.imshow("carRes", carRes)
+    print("------------------------------------------------------------------")
+    print("Исходная с исходной, ошибка восстановления", getError(imgCar, imgCar))
+    print("Исходная с зашумленной, ошибка восстановления", getError(imgCar, imgCarNose))
+    print("Исходная с отфильтрованной ошибка восстановления", getError(imgCar, carRes))
+    print("В процентном соотношении стало лучше на ", 100 - (getError(imgCar, carRes)*100 / getError(imgCar, imgCarNose))," %")
+
+    imgTramp = cv2.imread("tramp.jpg")
+    imgTrampNose = addNoise(imgTramp, 13)
+    cv2.imshow("imgTramp", imgTramp)
+    cv2.imshow("imgTrampNose", imgTrampNose)
+    bTrampNose, gTrampNose, rTrampNose = cv2.split(imgTrampNose)
+    resultBTramp = Convolution(bTrampNose, Mask, D)
+    resultGrTamp= Convolution(gTrampNose, Mask2, D)
+    resultRTramp = Convolution(rTrampNose, Mask3, D)
+    trampRes = cv2.merge((resultBTramp, resultGrTamp, resultRTramp))
+
+    cv2.imshow("trampRes", trampRes)
+    print("------------------------------------------------------------------")
+    print("Исходная с исходной, ошибка восстановления", getError(imgTramp, imgTramp))
+    print("Исходная с зашумленной, ошибка восстановления", getError(imgTramp, imgTrampNose))
+    print("Исходная с отфильтрованной ошибка восстановления", getError(imgTramp, trampRes))
+    print("В процентном соотношении стало лучше на ", 100 - (getError(imgTramp, trampRes)*100 / getError(imgTramp, imgTrampNose))," %")
 
     cv2.waitKey(0)
